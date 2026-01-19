@@ -19,10 +19,23 @@ class ApiVideoMessengerLiveStreamPlatform extends ApiVideoLiveStreamPlatform
   ApiVideoMessengerLiveStreamPlatform() {
     // Pigeon-generated APIs and message channels may access the default binary
     // messenger which requires an initialized Flutter binding.
-    WidgetsFlutterBinding.ensureInitialized();
+    //
+    // Important: we must not force-initialize WidgetsFlutterBinding if another
+    // binding (e.g. TestWidgetsFlutterBinding / IntegrationTestWidgetsFlutterBinding)
+    // is already active, as that will assert.
+    _ensureFlutterBindingInitialized();
     liveStreamHostApi = LiveStreamHostApi();
     cameraProviderHostApi = CameraProviderHostApi();
     LiveStreamFlutterApi.setUp(this);
+  }
+
+  static void _ensureFlutterBindingInitialized() {
+    try {
+      // Accessing instance throws if the binding hasn't been initialized yet.
+      WidgetsBinding.instance;
+    } catch (_) {
+      WidgetsFlutterBinding.ensureInitialized();
+    }
   }
 
   /// Registers this class as the default instance of [PathProviderPlatform].
