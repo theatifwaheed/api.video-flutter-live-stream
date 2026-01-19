@@ -17,28 +17,6 @@ class LiveStreamViewManager: NSObject {
     private let initializationQueue = DispatchQueue(label: "com.apivideo.livestream.init", qos: .userInitiated)
     private var pendingVideoConfig: VideoConfig?
     private var pendingAudioConfig: AudioConfig?
-    
-    // Default configs for fallback (created via NativeConfig conversion)
-    private var defaultVideoConfig: VideoConfig {
-        let nativeConfig = NativeVideoConfig(
-            bitrate: 3_000_000,
-            resolution: NativeResolution(width: 1280, height: 720),
-            fps: 30,
-            gopDurationInS: 2.0
-        )
-        return nativeConfig.toVideoConfig()
-    }
-    
-    private var defaultAudioConfig: AudioConfig {
-        let nativeConfig = NativeAudioConfig(
-            bitrate: 128_000,
-            channel: .stereo,
-            sampleRate: 44100,
-            enableEchoCanceler: true,
-            enableNoiseSuppressor: true
-        )
-        return nativeConfig.toAudioConfig()
-    }
 
     var delegate: LiveStreamViewManagerDelegate?
 
@@ -97,11 +75,22 @@ class LiveStreamViewManager: NSObject {
 
     var videoConfig: VideoConfig {
         get {
+            // If liveStream is initialized, return its config
             if let liveStream = liveStream {
                 return liveStream.videoConfig
             }
-            // Return default config if not initialized, or pending config if set
-            return pendingVideoConfig ?? defaultVideoConfig
+            // If we have a pending config, return it
+            if let pendingConfig = pendingVideoConfig {
+                return pendingConfig
+            }
+            // Fallback: return a basic default config (configs should usually be set before reading)
+            // Using the same pattern as ConfigExtensions to create VideoConfig
+            return VideoConfig(
+                bitrate: 3_000_000,
+                resolution: CGSize(width: 1280, height: 720),
+                fps: Float64(30),
+                gopDuration: 2.0
+            )
         }
         set {
             if isInitialized, let liveStream = liveStream {
@@ -117,11 +106,17 @@ class LiveStreamViewManager: NSObject {
 
     var audioConfig: AudioConfig {
         get {
+            // If liveStream is initialized, return its config
             if let liveStream = liveStream {
                 return liveStream.audioConfig
             }
-            // Return default config if not initialized, or pending config if set
-            return pendingAudioConfig ?? defaultAudioConfig
+            // If we have a pending config, return it
+            if let pendingConfig = pendingAudioConfig {
+                return pendingConfig
+            }
+            // Fallback: return a basic default config (configs should usually be set before reading)
+            // Using the same pattern as ConfigExtensions to create AudioConfig
+            return AudioConfig(bitrate: 128_000)
         }
         set {
             if isInitialized, let liveStream = liveStream {
