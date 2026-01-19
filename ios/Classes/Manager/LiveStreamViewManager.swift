@@ -17,6 +17,20 @@ class LiveStreamViewManager: NSObject {
     private let initializationQueue = DispatchQueue(label: "com.apivideo.livestream.init", qos: .userInitiated)
     private var pendingVideoConfig: VideoConfig?
     private var pendingAudioConfig: AudioConfig?
+    
+    // Default configs for fallback (computed properties)
+    private var defaultVideoConfig: VideoConfig {
+        return VideoConfig(
+            bitrate: 3_000_000,
+            resolution: CGSize(width: 1280, height: 720),
+            fps: Float64(30),
+            gopDuration: 2.0
+        )
+    }
+    
+    private var defaultAudioConfig: AudioConfig {
+        return AudioConfig(bitrate: 128_000)
+    }
 
     var delegate: LiveStreamViewManagerDelegate?
 
@@ -78,8 +92,8 @@ class LiveStreamViewManager: NSObject {
             if let liveStream = liveStream {
                 return liveStream.videoConfig
             }
-            // Return default config if not initialized
-            return VideoConfig.default()
+            // Return default config if not initialized, or pending config if set
+            return pendingVideoConfig ?? defaultVideoConfig
         }
         set {
             if isInitialized, let liveStream = liveStream {
@@ -98,8 +112,8 @@ class LiveStreamViewManager: NSObject {
             if let liveStream = liveStream {
                 return liveStream.audioConfig
             }
-            // Return default config if not initialized
-            return AudioConfig.default()
+            // Return default config if not initialized, or pending config if set
+            return pendingAudioConfig ?? defaultAudioConfig
         }
         set {
             if isInitialized, let liveStream = liveStream {
@@ -234,20 +248,3 @@ extension LiveStreamViewManager: ApiVideoLiveStreamDelegate {
     }
 }
 
-// Default config extensions for fallback
-extension VideoConfig {
-    static func default() -> VideoConfig {
-        return VideoConfig(
-            bitrate: 3_000_000,
-            resolution: CGSize(width: 1280, height: 720),
-            fps: 30,
-            gopDuration: 2.0
-        )
-    }
-}
-
-extension AudioConfig {
-    static func default() -> AudioConfig {
-        return AudioConfig(bitrate: 128_000)
-    }
-}
