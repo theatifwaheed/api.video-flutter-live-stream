@@ -53,21 +53,21 @@ class _ApiVideoCameraPreviewState extends State<ApiVideoCameraPreview>
   }
 
   /// Initializes video size asynchronously without blocking the UI.
-  /// Uses a short timeout on iOS to avoid blocking, and relies on
-  /// onVideoSizeChanged callback for updates.
+  /// On iOS, relies entirely on onVideoSizeChanged callback to avoid blocking.
+  /// On Android, attempts to get video size with a timeout.
   void _initializeVideoSize() {
-    // Use a short timeout to avoid blocking, especially on iOS
-    // If the call completes quickly, we get the size immediately
-    // Otherwise, we rely on onVideoSizeChanged callback
-    final timeoutDuration = Platform.isIOS 
-        ? const Duration(milliseconds: 100) 
-        : const Duration(seconds: 5);
+    // On iOS, don't call videoSize at all - it causes blocking
+    // Rely entirely on onVideoSizeChanged callback which fires when video config is set
+    if (Platform.isIOS) {
+      return;
+    }
     
+    // On Android, try to get the size with a timeout
     widget.controller.videoSize
         .timeout(
-          timeoutDuration,
+          const Duration(seconds: 5),
           onTimeout: () {
-            // Timeout is expected on iOS - we'll get the size via onVideoSizeChanged
+            // If timeout, rely on onVideoSizeChanged callback
             return null;
           },
         )
