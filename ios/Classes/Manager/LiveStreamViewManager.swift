@@ -18,18 +18,26 @@ class LiveStreamViewManager: NSObject {
     private var pendingVideoConfig: VideoConfig?
     private var pendingAudioConfig: AudioConfig?
     
-    // Default configs for fallback (computed properties)
+    // Default configs for fallback (created via NativeConfig conversion)
     private var defaultVideoConfig: VideoConfig {
-        return VideoConfig(
+        let nativeConfig = NativeVideoConfig(
             bitrate: 3_000_000,
-            resolution: CGSize(width: 1280, height: 720),
-            fps: Float64(30),
-            gopDuration: 2.0
+            resolution: NativeResolution(width: 1280, height: 720),
+            fps: 30,
+            gopDurationInS: 2.0
         )
+        return nativeConfig.toVideoConfig()
     }
     
     private var defaultAudioConfig: AudioConfig {
-        return AudioConfig(bitrate: 128_000)
+        let nativeConfig = NativeAudioConfig(
+            bitrate: 128_000,
+            channel: .stereo,
+            sampleRate: 44100,
+            enableEchoCanceler: true,
+            enableNoiseSuppressor: true
+        )
+        return nativeConfig.toAudioConfig()
     }
 
     var delegate: LiveStreamViewManagerDelegate?
