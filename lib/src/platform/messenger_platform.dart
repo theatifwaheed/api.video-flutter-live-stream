@@ -11,31 +11,37 @@ import 'types/camera/messenger_camera_settings.dart';
 /// Controller of the live streaming
 class ApiVideoMessengerLiveStreamPlatform extends ApiVideoLiveStreamPlatform
     implements LiveStreamFlutterApi {
-  late final LiveStreamHostApi liveStreamHostApi;
-  late final CameraProviderHostApi cameraProviderHostApi;
+  LiveStreamHostApi? _liveStreamHostApi;
+  CameraProviderHostApi? _cameraProviderHostApi;
+  bool _isPigeonSetup = false;
 
   late ApiVideoLiveStreamEventsListener? _eventsListener;
 
   ApiVideoMessengerLiveStreamPlatform() {
-    // Pigeon-generated APIs and message channels may access the default binary
-    // messenger which requires an initialized Flutter binding.
+    // Intentionally no Flutter binding / messenger work here.
     //
-    // Important: we must not force-initialize WidgetsFlutterBinding if another
-    // binding (e.g. TestWidgetsFlutterBinding / IntegrationTestWidgetsFlutterBinding)
-    // is already active, as that will assert.
-    _ensureFlutterBindingInitialized();
-    liveStreamHostApi = LiveStreamHostApi();
-    cameraProviderHostApi = CameraProviderHostApi();
-    LiveStreamFlutterApi.setUp(this);
+    // This constructor can be invoked very early during plugin registration
+    // (before or during binding initialization). We lazily set up Pigeon
+    // channels and host APIs on first actual use.
   }
 
-  static void _ensureFlutterBindingInitialized() {
-    try {
-      // Accessing instance throws if the binding hasn't been initialized yet.
-      WidgetsBinding.instance;
-    } catch (_) {
-      WidgetsFlutterBinding.ensureInitialized();
-    }
+  void _ensurePigeonSetup() {
+    if (_isPigeonSetup) return;
+    WidgetsFlutterBinding.ensureInitialized();
+    _liveStreamHostApi ??= LiveStreamHostApi();
+    _cameraProviderHostApi ??= CameraProviderHostApi();
+    LiveStreamFlutterApi.setUp(this);
+    _isPigeonSetup = true;
+  }
+
+  LiveStreamHostApi get liveStreamHostApi {
+    _ensurePigeonSetup();
+    return _liveStreamHostApi!;
+  }
+
+  CameraProviderHostApi get cameraProviderHostApi {
+    _ensurePigeonSetup();
+    return _cameraProviderHostApi!;
   }
 
   /// Registers this class as the default instance of [PathProviderPlatform].
