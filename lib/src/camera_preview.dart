@@ -48,14 +48,37 @@ class _ApiVideoCameraPreviewState extends State<ApiVideoCameraPreview>
     widget.controller.addWidgetListener(this);
     widget.controller.addEventsListener(this);
     if (widget.controller.isInitialized) {
-      if (Platform.isAndroid) {
-        widget.controller.videoSize.then((size) {
-          if (size != null) {
+      _initializeVideoSize();
+    }
+  }
+
+  /// Initializes video size asynchronously without blocking the UI.
+  /// Uses a short timeout on iOS to avoid blocking, and relies on
+  /// onVideoSizeChanged callback for updates.
+  void _initializeVideoSize() {
+    // Use a short timeout to avoid blocking, especially on iOS
+    // If the call completes quickly, we get the size immediately
+    // Otherwise, we rely on onVideoSizeChanged callback
+    final timeoutDuration = Platform.isIOS 
+        ? const Duration(milliseconds: 100) 
+        : const Duration(seconds: 5);
+    
+    widget.controller.videoSize
+        .timeout(
+          timeoutDuration,
+          onTimeout: () {
+            // Timeout is expected on iOS - we'll get the size via onVideoSizeChanged
+            return null;
+          },
+        )
+        .then((size) {
+          if (size != null && mounted) {
             _updateAspectRatio(size);
           }
+        })
+        .catchError((error) {
+          // Ignore errors - onVideoSizeChanged will handle it
         });
-      }
-    }
   }
 
   @override
@@ -72,6 +95,11 @@ class _ApiVideoCameraPreviewState extends State<ApiVideoCameraPreview>
       setState(() {
         _textureId = newTextureId;
       });
+    }
+    // If controller is now initialized and we haven't gotten the size yet,
+    // try to initialize it (in case controller initialized after widget creation)
+    if (widget.controller.isInitialized && _size == const Size(1280, 720)) {
+      _initializeVideoSize();
     }
   }
 
