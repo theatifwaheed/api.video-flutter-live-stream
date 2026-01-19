@@ -42,8 +42,7 @@ class LiveStreamHostApiImpl: LiveStreamHostApi {
     }
 
     func startPreview(completion: @escaping (Result<Void, any Error>) -> Void) {
-        flutterView!.startPreview()
-        completion(.success(()))
+        flutterView!.startPreview(completion: completion)
     }
 
     func stopPreview() throws {
