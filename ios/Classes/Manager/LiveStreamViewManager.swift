@@ -30,6 +30,7 @@ class LiveStreamViewManager: NSObject {
     }
 
     private(set) var isStreaming = false
+    private var isVideoMuted = false
 
     var videoConfig: VideoConfig {
         get {
@@ -112,6 +113,19 @@ class LiveStreamViewManager: NSObject {
     func stopStreaming() {
         liveStream.stopStreaming()
         isStreaming = false
+        isVideoMuted = false // Reset mute state
+    }
+
+    func toggleVideoMute() {
+        if !isStreaming {
+            return // Do nothing if not streaming
+        }
+        isVideoMuted = !isVideoMuted
+        if isVideoMuted {
+            liveStream.stopPreview() // Stop video capture
+        } else {
+            liveStream.startPreview() // Start video capture
+        }
     }
 }
 

@@ -123,6 +123,8 @@ abstract class LiveStreamHostApi {
 
   void setIsMuted(bool isMuted);
 
+  void toggleVideoMute();
+
   NativeResolution? getVideoResolution();
 }
 

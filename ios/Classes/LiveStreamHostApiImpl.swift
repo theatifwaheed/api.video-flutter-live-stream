@@ -71,6 +71,10 @@ class LiveStreamHostApiImpl: LiveStreamHostApi {
         flutterView!.isMuted = isMuted
     }
 
+    func toggleVideoMute() throws {
+        flutterView?.toggleVideoMute()
+    }
+
     func getVideoResolution() throws -> NativeResolution? {
         flutterView?.videoConfig.resolution.toNativeResolution()
     }
