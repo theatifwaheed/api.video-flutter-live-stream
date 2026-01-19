@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:native_device_orientation/native_device_orientation.dart';
@@ -46,11 +48,13 @@ class _ApiVideoCameraPreviewState extends State<ApiVideoCameraPreview>
     widget.controller.addWidgetListener(this);
     widget.controller.addEventsListener(this);
     if (widget.controller.isInitialized) {
-      widget.controller.videoSize.then((size) {
-        if (size != null) {
-          _updateAspectRatio(size);
-        }
-      });
+      if (Platform.isAndroid) {
+        widget.controller.videoSize.then((size) {
+          if (size != null) {
+            _updateAspectRatio(size);
+          }
+        });
+      }
     }
   }
 
