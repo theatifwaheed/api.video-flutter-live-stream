@@ -11,12 +11,17 @@ import 'types/camera/messenger_camera_settings.dart';
 /// Controller of the live streaming
 class ApiVideoMessengerLiveStreamPlatform extends ApiVideoLiveStreamPlatform
     implements LiveStreamFlutterApi {
-  final LiveStreamHostApi liveStreamHostApi = LiveStreamHostApi();
-  final CameraProviderHostApi cameraProviderHostApi = CameraProviderHostApi();
+  late final LiveStreamHostApi liveStreamHostApi;
+  late final CameraProviderHostApi cameraProviderHostApi;
 
   late ApiVideoLiveStreamEventsListener? _eventsListener;
 
   ApiVideoMessengerLiveStreamPlatform() {
+    // Pigeon-generated APIs and message channels may access the default binary
+    // messenger which requires an initialized Flutter binding.
+    WidgetsFlutterBinding.ensureInitialized();
+    liveStreamHostApi = LiveStreamHostApi();
+    cameraProviderHostApi = CameraProviderHostApi();
     LiveStreamFlutterApi.setUp(this);
   }
 
